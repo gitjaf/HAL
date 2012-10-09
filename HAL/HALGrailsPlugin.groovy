@@ -1,4 +1,4 @@
-class HALJSONGrailsPlugin {
+class HALGrailsPlugin {
     // the plugin version
     def version = "0.1"
     // the version or versions of Grails the plugin is designed for
@@ -11,11 +11,24 @@ class HALJSONGrailsPlugin {
     ]
 
     // TODO Fill in these fields
-    def title = "HALJSON Plugin" // Headline display name of the plugin
+    def title = "HAL Plugin" // Headline display name of the plugin
     def author = "Your name"
     def authorEmail = ""
     def description = '''\
-Brief summary/description of the plugin.
+This plugin provides a service to transform data from your model into the format
+proposed by the Hypertext Application Language (HAL).
+
+HAL is a simple way of linking with JSON or XML.
+
+It provides a set of conventions for expressing hyperlinks to, and embeddedness of,
+related resources - the rest of a HAL document is just plain old JSON or XML.
+
+HAL is a bit like HTML for machines, in that it is designed to drive many different
+types of application.
+ 
+The difference is that HTML is intended for presenting a graphical hypertext interface
+to a ‘human actor’, whereas HAL is intended for presenting a machine hypertext 
+interface to ‘automated actors’.
 '''
 
     // URL to the plugin's documentation
