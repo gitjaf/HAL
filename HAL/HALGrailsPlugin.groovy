@@ -1,6 +1,6 @@
 class HALGrailsPlugin {
     // the plugin version
-    def version = "0.1"
+    def version = "0.2"
     // the version or versions of Grails the plugin is designed for
     def grailsVersion = "2.1 > *"
     // the other plugins this plugin depends on
@@ -32,7 +32,7 @@ interface to ‘automated actors’.
 '''
 
     // URL to the plugin's documentation
-    def documentation = "http://grails.org/plugin/haljson"
+    def documentation = "http://grails.org/plugin/hal"
 
     // Extra (optional) plugin metadata
 

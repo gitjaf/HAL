@@ -24,12 +24,18 @@ class HalBuilderService {
 		HashMap resource = new HashMap()
 
 		def gdc = grailsApplication.getDomainClass(item.class.getName())
+		println item
 		links.self = [href:this.getLinkFor(item)]
+		
 		item.properties.each{name, value ->
 			if(value && !(name in excludedProperties)  && !(name ==~ /.*Id$/) ){
 				def pp = gdc.persistentProperties.find{it.name == name}
 				if(pp?.association){
-					links."${name}" = [href: this.getAssociation(pp, item)]  
+					if(pp.name in item?.halRepresenter?.embedded){
+						resource._embedded = ["$name": this.getAssociation(pp, value, true)]
+					} else {
+						links."${name}" = [href: this.getAssociation(pp, item, false)]  
+					}
 				} else {
 					resource."${name}" = value
 				}
@@ -40,7 +46,7 @@ class HalBuilderService {
 		return resource
 	}
 	
-    def buildList(List rawData){
+    def buildList = { List rawData ->
 	
 		List resources = new ArrayList() 
 		
@@ -51,12 +57,11 @@ class HalBuilderService {
 		return resources
 	}
 	
-	protected getAssociation(GrailsDomainClassProperty pp, def inst){
-	
+	protected getAssociation = { GrailsDomainClassProperty pp, inst, embedded ->
 		if(pp.isOneToMany() || pp.isManyToMany()){
-			return getLinkTo(getController(pp.type.getName()), getAction(inst, "list"))	
+			return ((embedded) ? getEmbeddedFor(inst as List) : getLinkTo(getController(pp.type.getName()), getAction(inst, "list")))
 		} else {
-			return getLinkFor(inst."${pp.name}")
+			return ((embedded) ? getEmbeddedFor(inst) : getLinkFor(inst."${pp.name}"))
 		}	
 	}
 	
@@ -85,5 +90,13 @@ class HalBuilderService {
 		return grailsLinkGenerator.link(controller: con, action: act, id: id, absolute: true)
 	}	
 
+	protected getEmbeddedFor(List list) { 
+		return buildList(list)
+	}
+	
+	protected getEmbeddedFor = { inst ->
+		return build(inst)
+	}
+	
 	
 }
