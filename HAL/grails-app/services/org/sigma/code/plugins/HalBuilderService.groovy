@@ -11,6 +11,8 @@ import org.codehaus.groovy.grails.web.mapping.LinkGenerator
 
 
 class HalBuilderService {
+	
+	//TODO Cambiar el termino resource por representation donde corresponda.
 
 	def excludedProperties = ['class', 'metaClass', 'id', 'halRepresenter' ]
 
@@ -19,39 +21,36 @@ class HalBuilderService {
 	LinkGenerator grailsLinkGenerator
 	
 	
-	def build = {item ->
+	def buildModel = {item ->
 		HashMap links = new HashMap()
 		HashMap resource = new HashMap()
 
 		def gdc = grailsApplication.getDomainClass(item.class.getName())
-		println item
 		links.self = [href:this.getLinkFor(item)]
 		
 		item.properties.each{name, value ->
 			if(value && !(name in excludedProperties)  && !(name ==~ /.*Id$/) ){
 				def pp = gdc.persistentProperties.find{it.name == name}
 				if(pp?.association){
+					links."${name}" = [href: this.getAssociation(pp, item, false)]  
 					if(pp.name in item?.halRepresenter?.embedded){
 						resource._embedded = ["$name": this.getAssociation(pp, value, true)]
-					} else {
-						links."${name}" = [href: this.getAssociation(pp, item, false)]  
-					}
+					} 
 				} else {
 					resource."${name}" = value
 				}
 			}
 		}
 		resource._links = links
-		
 		return resource
 	}
 	
-    def buildList = { List rawData ->
+    def buildModelList = { List rawData ->
 	
 		List resources = new ArrayList() 
 		
 		rawData.each{ 
-			resources.add(build(it))
+			resources.add(buildModel(it))
 		}
 		
 		return resources
@@ -74,7 +73,7 @@ class HalBuilderService {
 	}
 	
 	protected getController = { inst ->
-		return (inst.properties?.halRepresenter?.controller ? inst.properties.halRepresenter.controller : inst.class.getSimpleName())
+		return (inst.properties?.halRepresenter?.controller ? inst.properties.halRepresenter.controller : inst.class.getSimpleName().toLowerCase())
 	}
 	
 	protected getAction = { inst, String action ->
@@ -83,19 +82,19 @@ class HalBuilderService {
 	}
 	
 	protected getLinkTo(String con, String act){
-		return grailsLinkGenerator.link(controller: con, action: act, absolute: true)
+		return grailsLinkGenerator.link(controller: con, action: act,  absolute: false) - grailsLinkGenerator.contextPath
 	}
 	
 	protected getLinkTo(String con, String act, Long id){
-		return grailsLinkGenerator.link(controller: con, action: act, id: id, absolute: true)
+		return grailsLinkGenerator.link(controller: con, action: act, id: id, absolute: false) - grailsLinkGenerator.contextPath
 	}	
 
 	protected getEmbeddedFor(List list) { 
-		return buildList(list)
+		return buildModelList(list)
 	}
 	
 	protected getEmbeddedFor = { inst ->
-		return build(inst)
+		return buildModel(inst)
 	}
 	
 	
