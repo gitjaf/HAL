@@ -73,12 +73,11 @@ class HalBuilderService {
 	}
 	
 	protected getController = { inst ->
-		return (inst.properties?.halRepresenter?.controller ? inst.properties.halRepresenter.controller : inst.class.getSimpleName().toLowerCase())
+		return (inst.properties?.halRepresenter?.controller ?:  inst.class.getSimpleName().toLowerCase())
 	}
 	
 	protected getAction = { inst, String action ->
-		return (inst.properties?.halRepresenter?."${action}" ? inst.properties.halRepresenter."${action}" :
-			grailsApplication.config.halRepresenter."${action}" ? grailsApplication.config.halRepresenter."${action}" : action)
+		return (inst.properties?.halRepresenter?."${action}" ?:	grailsApplication.config.halRepresenter."${action}" ?: action)
 	}
 	
 	protected getLinkTo(String con, String act){
