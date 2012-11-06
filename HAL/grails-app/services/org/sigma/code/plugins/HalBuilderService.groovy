@@ -77,15 +77,15 @@ class HalBuilderService {
 	}
 	
 	protected getAction = { inst, String action ->
-		return (inst.properties?.halRepresenter?."${action}" ?:	grailsApplication.config.halRepresenter."${action}" ?: action)
+		return (inst.properties?.halRepresenter?."${action}" ?:	action)
 	}
 	
 	protected getLinkTo(String con, String act){
-		return grailsLinkGenerator.link(controller: con, action: act,  absolute: false) - grailsLinkGenerator.contextPath
+		return grailsLinkGenerator.link(controller: con, action: act,  absolute: false) - grailsLinkGenerator.contextPath - "/$act"
 	}
 	
 	protected getLinkTo(String con, String act, Long id){
-		return grailsLinkGenerator.link(controller: con, action: act, id: id, absolute: false) - grailsLinkGenerator.contextPath
+		return grailsLinkGenerator.link(controller: con, action: act, id: id, absolute: false) - grailsLinkGenerator.contextPath - "/$act"
 	}	
 
 	protected getEmbeddedFor(List list) { 
