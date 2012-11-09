@@ -24,6 +24,7 @@ class HalBuilderService {
 	def buildModel = {item ->
 		HashMap links = new HashMap()
 		HashMap resource = new HashMap()
+		HashMap embeddeds = new HashMap()
 
 		def gdc = grailsApplication.getDomainClass(item.class.getName())
 		links.self = [href:this.getLinkFor(item)]
@@ -32,14 +33,17 @@ class HalBuilderService {
 			if(value && !(name in excludedProperties)  && !(name ==~ /.*Id$/) ){
 				def pp = gdc.persistentProperties.find{it.name == name}
 				if(pp?.association){
-					links."${name}" = [href: this.getAssociation(pp, item, false)]  
+					links."${name}" = this.getAssociation(pp, value, false)  
 					if(pp.name in item?.halRepresenter?.embedded){
-						resource._embedded = ["$name": this.getAssociation(pp, value, true)]
+						 embeddeds.put("$name",this.getAssociation(pp, value, true))
 					} 
 				} else {
 					resource."${name}" = value
 				}
 			}
+		}
+		if(!embeddeds.isEmpty()){
+			resource._embedded = embeddeds
 		}
 		resource._links = links
 		return resource
@@ -58,9 +62,9 @@ class HalBuilderService {
 	
 	protected getAssociation = { GrailsDomainClassProperty pp, inst, embedded ->
 		if(pp.isOneToMany() || pp.isManyToMany()){
-			return ((embedded) ? getEmbeddedFor(inst as List) : getLinkTo(getController(pp.type.getName()), getAction(inst, "list")))
+			return ((embedded) ? getEmbeddedFor(inst as List) : inst.collect{["href": getLinkFor(it)]})
 		} else {
-			return ((embedded) ? getEmbeddedFor(inst) : getLinkFor(inst."${pp.name}"))
+			return ((embedded) ? getEmbeddedFor(inst) : ["href":getLinkFor(inst)])
 		}	
 	}
 	
@@ -73,7 +77,10 @@ class HalBuilderService {
 	}
 	
 	protected getController = { inst ->
-		return (inst.properties?.halRepresenter?.controller ?:  inst.class.getSimpleName().toLowerCase())
+		return (inst.properties?.halRepresenter?.controller ?: 
+			(!grailsApplication.getDomainClass(inst.getClass().getName())) ?
+				inst.class.getSimpleName().toLowerCase()[0..<inst.class.getSimpleName().indexOf("_\$")] :
+			 	inst.class.getSimpleName().toLowerCase())
 	}
 	
 	protected getAction = { inst, String action ->
