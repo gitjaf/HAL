@@ -14,7 +14,7 @@ class HalBuilderService {
 	
 	//TODO Cambiar el termino resource por representation donde corresponda.
 
-	def excludedProperties = ['class', 'metaClass', 'id', 'halRepresenter' ]
+	def excludedProperties = ['class', 'metaClass', 'halRepresenter' ]
 
 	def grailsApplication
 	
@@ -28,10 +28,12 @@ class HalBuilderService {
 
 		def gdc = grailsApplication.getDomainClass(item.class.getName())
 		links.self = [href:this.getLinkFor(item)]
-		
+		resource."id" = item.id
 		item.properties.each{name, value ->
-			if(value && !(name in excludedProperties)  && !(name ==~ /.*Id$/) ){
+		
+			if(value && !(name in excludedProperties) && !(name ==~ /.*Id$/) ){
 				def pp = gdc.persistentProperties.find{it.name == name}
+				
 				if(pp?.association){
 					links."${name}" = this.getAssociation(pp, value, false)  
 					if(pp.name in item?.halRepresenter?.embedded){
