@@ -17,6 +17,8 @@ class HalBuilderService {
 	def excludedProperties = ['class', 'metaClass', 'halRepresenter' ]
 
 	def grailsApplication
+
+	def linksParams = [append: "", prepend: "", query:""]
 	
 	LinkGenerator grailsLinkGenerator
 	
@@ -26,7 +28,9 @@ class HalBuilderService {
 		HashMap resource = new HashMap()
 		HashMap embeddeds = new HashMap()
 
-		def gdc = grailsApplication.getDomainClass(item.class.getName())
+		def gdc = (grailsApplication.getDomainClass(item.getClass().getName())) ?:
+				grailsApplication.getDomainClass((item.class.getName()[0..<item.class.getName().indexOf("_\$")])) 
+		if(!gdc){println item.class.getName()}
 		links.self = [href:this.getLinkFor(item)]
 		resource."id" = item.id
 		item.properties.each{name, value ->
@@ -51,11 +55,14 @@ class HalBuilderService {
 		return resource
 	}
 	
-    def buildModelList = { List rawData ->
-	
+    def buildModelList = { List rawData, Map linksParams ->
+			
+		if(linksParams){ this.linksParams = linksParams}
+
 		List resources = new ArrayList() 
 		
 		rawData.each{ 
+			
 			resources.add(buildModel(it))
 		}
 		
@@ -74,7 +81,7 @@ class HalBuilderService {
 		def controller = getController(inst)
 		def action = getAction(inst, "show")
 		
-		return getLinkTo(controller, action, inst.id)
+		return getLinkTo(controller, action, inst.id, this.linksParams)
 			
 	}
 	
@@ -89,16 +96,16 @@ class HalBuilderService {
 		return (inst.properties?.halRepresenter?."${action}" ?:	action)
 	}
 	
-	protected getLinkTo(String con, String act){
-		return grailsLinkGenerator.link(controller: con, action: act,  absolute: false) - grailsLinkGenerator.contextPath - "/$act"
+	protected getLinkTo(String con, String act, linksParams){
+		return linksParams.prepend + grailsLinkGenerator.link(controller: con, action: act,  absolute: false) - grailsLinkGenerator.contextPath - "/$act" + linksParams.append
 	}
 	
-	protected getLinkTo(String con, String act, Long id){
-		return grailsLinkGenerator.link(controller: con, action: act, id: id, absolute: false) - grailsLinkGenerator.contextPath - "/$act"
+	protected getLinkTo(String con, String act, Long id, linksParams){
+		return linksParams.prepend + grailsLinkGenerator.link(controller: con, action: act, id: id, absolute: false) - grailsLinkGenerator.contextPath - "/$act" + linksParams.append
 	}	
 
 	protected getEmbeddedFor(List list) { 
-		return buildModelList(list)
+		return buildModelList(list, this.linksParams)
 	}
 	
 	protected getEmbeddedFor = { inst ->
