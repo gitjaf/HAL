@@ -55,7 +55,7 @@ class HalBuilderService {
 		return resource
 	}
 	
-    def buildModelList = { List rawData, Map linksParams ->
+    def buildModelList = { List rawData, Map linksParams = null ->
 			
 		if(linksParams){ this.linksParams = linksParams}
 
